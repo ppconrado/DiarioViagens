@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import MapSurface from "@/src/components/MapSurface";
+import MapSurface from "@/src/components/MapSurface.native";
 import { ScreenShell } from "@/src/components/ScreenShell";
 import { usePlaces } from "@/src/context/PlacesContext";
 import { useLocation } from "@/src/hooks/useLocation";

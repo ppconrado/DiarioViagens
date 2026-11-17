@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library/legacy";
@@ -16,14 +16,14 @@ export function PhotoField({ value, onChange }: { value: string | null; onChange
     setWorking(true);
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted && Platform.OS !== "web") {
+      if (!permission.granted) {
         setError("A permissão da galeria foi negada. Ative o acesso às fotos nas configurações do dispositivo.");
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, quality: 0.85 });
       if (result.canceled || !result.assets?.[0]) return;
       let uri = result.assets[0].uri;
-      if (result.assets[0].assetId && Platform.OS !== "web") {
+      if (result.assets[0].assetId) {
         try {
           const asset = await MediaLibrary.getAssetInfoAsync(result.assets[0].assetId);
           uri = asset.localUri ?? asset.uri ?? uri;

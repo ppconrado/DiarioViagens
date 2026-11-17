@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { ActivityIndicator, Modal, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as MediaLibrary from "expo-media-library/legacy";
 import { Ionicons } from "@expo/vector-icons";
@@ -22,15 +22,13 @@ export function CameraModal({ visible, onClose, onCaptured }: CameraModalProps) 
       const picture = await cameraRef.current.takePictureAsync({ quality: 0.86 });
       if (!picture?.uri) throw new Error("A câmera não retornou uma foto.");
       let finalUri = picture.uri;
-      if (Platform.OS !== "web") {
-        const mediaPermission = await MediaLibrary.requestPermissionsAsync(true, ["photo"]);
-        if (!mediaPermission.granted) {
-          setError("A permissão para salvar na galeria foi negada. Ative o acesso às fotos nas configurações.");
-          return;
-        }
-        const savedAsset = await MediaLibrary.createAssetAsync(picture.uri);
-        finalUri = savedAsset.uri;
+      const mediaPermission = await MediaLibrary.requestPermissionsAsync(true, ["photo"]);
+      if (!mediaPermission.granted) {
+        setError("A permissão para salvar na galeria foi negada. Ative o acesso às fotos nas configurações.");
+        return;
       }
+      const savedAsset = await MediaLibrary.createAssetAsync(picture.uri);
+      finalUri = savedAsset.uri;
       onCaptured(finalUri);
     } catch {
       setError("Não foi possível registrar ou salvar a foto. Tente novamente.");

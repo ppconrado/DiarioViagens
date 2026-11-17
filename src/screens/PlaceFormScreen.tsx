@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -39,12 +39,10 @@ export default function PlaceFormScreen() {
     const enderecoCompleto = `${form.street.trim()}, ${form.number.trim()}, ${form.city.trim()}, ${form.state.trim()}, Brasil`;
     setSaving(true);
     try {
-      if (Platform.OS !== "web") {
-        const permission = await Location.requestForegroundPermissionsAsync();
-        if (!permission.granted) {
-          setError("A permissão de localização foi negada. Ela é necessária para converter o endereço em coordenadas e cadastrar o lugar.");
-          return;
-        }
+      const permission = await Location.requestForegroundPermissionsAsync();
+      if (!permission.granted) {
+        setError("A permissão de localização foi negada. Ela é necessária para converter o endereço em coordenadas e cadastrar o lugar.");
+        return;
       }
       const coordinates = await geocodeAddress(enderecoCompleto);
       if (!coordinates || !Number.isFinite(coordinates.latitude) || !Number.isFinite(coordinates.longitude)) {

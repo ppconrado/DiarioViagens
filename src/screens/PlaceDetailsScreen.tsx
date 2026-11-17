@@ -3,7 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RouteProp } from "@react-navigation/native";
-import MapSurface from "@/src/components/MapSurface";
+import MapSurface from "@/src/components/MapSurface.native";
 import { ActionButton } from "@/src/components/ActionButton";
 import { ScreenShell } from "@/src/components/ScreenShell";
 import { StatusBadge } from "@/src/components/StatusBadge";
