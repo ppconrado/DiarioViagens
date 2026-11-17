@@ -28,7 +28,8 @@ export function CameraModal({ visible, onClose, onCaptured }: CameraModalProps) 
         return;
       }
       const savedAsset = await MediaLibrary.createAssetAsync(picture.uri);
-      finalUri = savedAsset.uri;
+      const assetInfo = await MediaLibrary.getAssetInfoAsync(savedAsset.id);
+      finalUri = assetInfo.localUri ?? picture.uri;
       onCaptured(finalUri);
     } catch {
       setError("Não foi possível registrar ou salvar a foto. Tente novamente.");

@@ -24,16 +24,15 @@ export function PhotoField({ value, onChange }: { value: string | null; onChange
       if (result.canceled || !result.assets?.[0]) return;
       let uri = result.assets[0].uri;
       if (result.assets[0].assetId) {
-        try {
-          const asset = await MediaLibrary.getAssetInfoAsync(result.assets[0].assetId);
-          uri = asset.localUri ?? asset.uri ?? uri;
-        } catch {
-          // O URI retornado pelo ImagePicker continua válido quando o sistema oculta o assetId.
-        }
+        const asset = await MediaLibrary.getAssetInfoAsync(result.assets[0].assetId);
+        uri = asset.localUri ?? uri;
+      }
+      if (uri.startsWith("ph://")) {
+        throw new Error("Não foi possível preparar a foto para exibição neste dispositivo.");
       }
       onChange(uri);
-    } catch {
-      setError("Não foi possível abrir a galeria. Tente novamente.");
+    } catch (failure) {
+      setError(failure instanceof Error ? failure.message : "Não foi possível abrir a galeria. Tente novamente.");
     } finally {
       setWorking(false);
     }
