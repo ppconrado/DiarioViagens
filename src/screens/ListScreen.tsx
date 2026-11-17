@@ -1,26 +1,29 @@
 import { useMemo } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { BrandMark } from "@/src/components/BrandMark";
 import { PlaceCard } from "@/src/components/PlaceCard";
 import { ScreenShell } from "@/src/components/ScreenShell";
 import { usePlaces } from "@/src/context/PlacesContext";
 import { colors, fonts } from "@/src/theme/colors";
+import type { RootStackParamList } from "@/src/navigation/types";
 
 export default function ListScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { places, isLoaded, storageError } = usePlaces();
   const summary = useMemo(() => ({ planned: places.filter((place) => place.status === "Quero visitar").length, visited: places.filter((place) => place.status === "Visitado").length }), [places]);
 
   return (
     <ScreenShell>
-      <View style={styles.topRow}><BrandMark /><Pressable accessibilityRole="button" accessibilityLabel="Adicionar lugar" onPress={() => router.push("/place/new")} style={styles.addIcon}><Ionicons name="add" size={23} color={colors.background} /></Pressable></View>
+      <View style={styles.topRow}><BrandMark /><Pressable accessibilityRole="button" accessibilityLabel="Adicionar lugar" onPress={() => navigation.navigate("Cadastro")} style={styles.addIcon}><Ionicons name="add" size={23} color={colors.background} /></Pressable></View>
       {storageError ? <View accessibilityRole="alert" style={styles.storageWarning}><Ionicons name="alert-circle-outline" size={18} color={colors.danger} /><Text style={styles.storageWarningText}>{storageError}</Text></View> : null}
       <View style={styles.hero}>
         <View style={styles.orbit} /><Text style={styles.kicker}>SEU CADERNO DE ROTAS</Text>
         <Text style={styles.headline}>{places.length ? "O mundo está" : "Toda viagem"}{"\n"}<Text style={styles.headlineAccent}>{places.length ? "mais perto." : "começa com um lugar."}</Text></Text>
         <Text style={styles.subtitle}>{places.length ? "Guarde seus destinos e volte às memórias quando quiser." : "Guarde os destinos que moram nos seus planos e transforme cada visita em lembrança."}</Text>
-        <Pressable accessibilityRole="button" onPress={() => router.push("/place/new")} style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}><Ionicons name="add" size={19} color={colors.background} /><Text style={styles.heroButtonText}>Adicionar lugar</Text></Pressable>
+        <Pressable accessibilityRole="button" onPress={() => navigation.navigate("Cadastro")} style={({ pressed }) => [styles.heroButton, pressed && styles.pressed]}><Ionicons name="add" size={19} color={colors.background} /><Text style={styles.heroButtonText}>Adicionar lugar</Text></Pressable>
       </View>
       <View style={styles.summaryRow}>
         <View style={styles.summaryCard}><Text style={styles.summaryNumber}>{summary.planned}</Text><Text style={styles.summaryLabel}>na sua lista</Text><View style={[styles.summaryDot, { backgroundColor: colors.planned }]} /></View>
@@ -28,9 +31,9 @@ export default function ListScreen() {
       </View>
       <View style={styles.sectionHeader}><View><Text style={styles.sectionEyebrow}>COLEÇÃO</Text><Text style={styles.sectionTitle}>Seus lugares</Text></View><Text style={styles.count}>{places.length} {places.length === 1 ? "lugar" : "lugares"}</Text></View>
       {!isLoaded ? <View style={styles.loading}><ActivityIndicator color={colors.primary} /><Text style={styles.loadingText}>Abrindo seu diário…</Text></View> : places.length === 0 ? (
-        <View style={styles.emptyCard}><View style={styles.emptyIcon}><Ionicons name="compass-outline" size={26} color={colors.primary} /></View><Text style={styles.emptyTitle}>Ainda não há destinos por aqui</Text><Text style={styles.emptyCopy}>Adicione um lugar que quer conhecer ou uma viagem que já virou história.</Text><Pressable accessibilityRole="button" onPress={() => router.push("/place/new")} style={styles.emptyLink}><Text style={styles.emptyLinkText}>Começar meu diário</Text><Ionicons name="arrow-forward" size={15} color={colors.primary} /></Pressable></View>
+        <View style={styles.emptyCard}><View style={styles.emptyIcon}><Ionicons name="compass-outline" size={26} color={colors.primary} /></View><Text style={styles.emptyTitle}>Ainda não há destinos por aqui</Text><Text style={styles.emptyCopy}>Adicione um lugar que quer conhecer ou uma viagem que já virou história.</Text><Pressable accessibilityRole="button" onPress={() => navigation.navigate("Cadastro")} style={styles.emptyLink}><Text style={styles.emptyLinkText}>Começar meu diário</Text><Ionicons name="arrow-forward" size={15} color={colors.primary} /></Pressable></View>
       ) : (
-        <View style={styles.list}>{places.map((place) => <PlaceCard key={place.id} place={place} onPress={() => router.push({ pathname: "/place/[id]", params: { id: place.id } })} />)}</View>
+        <View style={styles.list}>{places.map((place) => <PlaceCard key={place.id} place={place} onPress={() => navigation.navigate("Detalhes", { id: place.id })} />)}</View>
       )}
       <View style={styles.footer}><Ionicons name="sparkles-outline" size={14} color={colors.accent} /><Text style={styles.footerText}>Feito para lembrar — e para planejar a próxima.</Text></View>
     </ScreenShell>

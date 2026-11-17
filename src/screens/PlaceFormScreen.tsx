@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RouteProp } from "@react-navigation/native";
 import * as Location from "expo-location";
 import { ActionButton } from "@/src/components/ActionButton";
 import { PhotoField } from "@/src/components/PhotoField";
@@ -10,13 +12,15 @@ import { usePlaces } from "@/src/context/PlacesContext";
 import { geocodeAddress } from "@/src/lib/geocoding";
 import type { PlaceDraft, PlaceStatus } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
+import type { RootStackParamList } from "@/src/navigation/types";
 
 type FormValues = { name: string; description: string; street: string; number: string; city: string; state: string; status: PlaceStatus; photoUri: string | null };
 const blank: FormValues = { name: "", description: "", street: "", number: "", city: "", state: "", status: "Quero visitar", photoUri: null };
 
 export default function PlaceFormScreen() {
-  const params = useLocalSearchParams<{ id?: string }>();
-  const editingId = typeof params.id === "string" ? params.id : undefined;
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "Cadastro">>();
+  const editingId = route.params?.id;
   const { isLoaded, storageError, findPlace, savePlace } = usePlaces();
   const existing = editingId ? findPlace(editingId) : undefined;
   const [formOverride, setFormOverride] = useState<FormValues | null>(null);
@@ -54,7 +58,7 @@ export default function PlaceFormScreen() {
         latitude: coordinates.latitude, longitude: coordinates.longitude,
       };
       await savePlace(draft);
-      router.back();
+      navigation.goBack();
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Não foi possível localizar ou salvar o endereço. Tente novamente.");
     } finally {
@@ -66,15 +70,15 @@ export default function PlaceFormScreen() {
     return <ScreenShell><ActivityIndicator color={colors.primary} /><Text style={styles.loadingText}>Carregando lugar…</Text></ScreenShell>;
   }
   if (storageError) {
-    return <ScreenShell><Text style={styles.title}>Diário indisponível</Text><Text style={styles.errorText}>{storageError}</Text><ActionButton title="Voltar" icon="arrow-back" onPress={() => router.back()} variant="outline" /></ScreenShell>;
+    return <ScreenShell><Text style={styles.title}>Diário indisponível</Text><Text style={styles.errorText}>{storageError}</Text><ActionButton title="Voltar" icon="arrow-back" onPress={() => navigation.goBack()} variant="outline" /></ScreenShell>;
   }
   if (editingId && !existing) {
-    return <ScreenShell><Text style={styles.title}>Lugar não encontrado</Text><ActionButton title="Voltar" icon="arrow-back" onPress={() => router.back()} variant="outline" /></ScreenShell>;
+    return <ScreenShell><Text style={styles.title}>Lugar não encontrado</Text><ActionButton title="Voltar" icon="arrow-back" onPress={() => navigation.goBack()} variant="outline" /></ScreenShell>;
   }
 
   return (
     <ScreenShell contentContainerStyle={styles.shell}>
-      <View style={styles.topRow}><Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.back}><Ionicons name="arrow-back" size={20} color={colors.text} /></Pressable><View style={styles.heading}><Text style={styles.eyebrow}>{editingId ? "ATUALIZE A LEMBRANÇA" : "GUARDE UM NOVO DESTINO"}</Text><Text style={styles.title}>{editingId ? "Editar lugar" : "Novo lugar"}</Text></View><View style={styles.spacer} /></View>
+      <View style={styles.topRow}><Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => navigation.goBack()} style={styles.back}><Ionicons name="arrow-back" size={20} color={colors.text} /></Pressable><View style={styles.heading}><Text style={styles.eyebrow}>{editingId ? "ATUALIZE A LEMBRANÇA" : "GUARDE UM NOVO DESTINO"}</Text><Text style={styles.title}>{editingId ? "Editar lugar" : "Novo lugar"}</Text></View><View style={styles.spacer} /></View>
       <View style={styles.intro}><Ionicons name="navigate-outline" size={17} color={colors.primary} /><Text style={styles.introText}>Um endereço completo ajuda a encontrar o lugar no mapa.</Text></View>
 
       <Field label="Nome do lugar *" value={form.name} onChangeText={(value) => setField("name", value)} placeholder="Ex.: Jardim Botânico" autoCapitalize="words" />

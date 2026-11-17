@@ -1,33 +1,30 @@
-import {
-  createNativeBottomTabNavigator,
-  createNativeBottomTabScreen,
-} from '@react-navigation/bottom-tabs/unstable';
-import { Platform } from 'react-native';
-import bell from '../assets/bell.png';
-import newspaper from '../assets/newspaper.png';
-import { Home } from './screens/Home';
-import { Updates } from './screens/Updates';
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { Ionicons } from "@expo/vector-icons";
+import ListScreen from "@/src/screens/ListScreen";
+import MapScreen from "@/src/screens/MapScreen";
+import StatsScreen from "@/src/screens/StatsScreen";
+import type { MainTabParamList } from "@/src/navigation/types";
 
-export const HomeTabs = createNativeBottomTabNavigator({
-  screens: {
-    Home: createNativeBottomTabScreen({
-      screen: Home,
-      options: {
-        title: 'Feed',
-        tabBarIcon: Platform.select({
-          ios: { type: 'sfSymbol', name: 'newspaper' },
-          default: { type: 'image', source: newspaper },
-        }),
-      },
-    }),
-    Updates: createNativeBottomTabScreen({
-      screen: Updates,
-      options: {
-        tabBarIcon: Platform.select({
-          ios: { type: 'sfSymbol', name: 'bell' },
-          default: { type: 'image', source: bell },
-        }),
-      },
-    }),
-  },
-});
+const Tabs = createBottomTabNavigator<MainTabParamList>();
+
+export function MainTabs() {
+  return (
+    <Tabs.Navigator screenOptions={{ headerShown: false }}>
+      <Tabs.Screen
+        name="Lista"
+        component={ListScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="Mapa"
+        component={MapScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="map-outline" size={size} color={color} /> }}
+      />
+      <Tabs.Screen
+        name="Estatísticas"
+        component={StatsScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart-outline" size={size} color={color} /> }}
+      />
+    </Tabs.Navigator>
+  );
+}

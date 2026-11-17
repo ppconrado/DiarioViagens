@@ -1,12 +1,16 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import MapSurface from "@/src/components/MapSurface";
 import { ScreenShell } from "@/src/components/ScreenShell";
 import { usePlaces } from "@/src/context/PlacesContext";
 import { useLocation } from "@/src/hooks/useLocation";
 import { colors, fonts } from "@/src/theme/colors";
+import type { RootStackParamList } from "@/src/navigation/types";
 
 export default function MapScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { places } = usePlaces();
   const { location, loading, permissionDenied, errorMessage, refreshLocation } = useLocation();
 
@@ -19,7 +23,7 @@ export default function MapScreen() {
       <Text style={styles.description}>Uma visão de todos os lugares que você guarda no diário.</Text>
       {permissionDenied ? <View style={styles.notice}><Ionicons name="location-outline" size={17} color={colors.accent} /><Text style={styles.noticeText}>A localização foi negada. Os lugares salvos continuam visíveis; permita o acesso para mostrar onde você está.</Text></View> : null}
       {errorMessage ? <View style={styles.notice}><Ionicons name="alert-circle-outline" size={17} color={colors.accent} /><Text style={styles.noticeText}>{errorMessage}</Text></View> : null}
-      <View style={styles.mapWrap}><MapSurface places={places} currentLocation={location} /></View>
+      <View style={styles.mapWrap}><MapSurface places={places} currentLocation={location} onSelectPlace={(id) => navigation.navigate("Detalhes", { id })} /></View>
       <View style={styles.legendRow}>
         <View style={styles.legend}><View style={[styles.dot, { backgroundColor: colors.planned }]} /><Text style={styles.legendText}>Quero visitar</Text></View>
         <View style={styles.legend}><View style={[styles.dot, { backgroundColor: colors.visited }]} /><Text style={styles.legendText}>Visitado</Text></View>

@@ -1,6 +1,8 @@
-import { Alert, Image, Platform, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useLocalSearchParams } from "expo-router";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RouteProp } from "@react-navigation/native";
 import MapSurface from "@/src/components/MapSurface";
 import { ActionButton } from "@/src/components/ActionButton";
 import { ScreenShell } from "@/src/components/ScreenShell";
@@ -8,15 +10,16 @@ import { StatusBadge } from "@/src/components/StatusBadge";
 import { usePlaces } from "@/src/context/PlacesContext";
 import { fullAddress } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
+import type { RootStackParamList } from "@/src/navigation/types";
 
 export default function PlaceDetailsScreen() {
-  const params = useLocalSearchParams<{ id: string }>();
-  const id = typeof params.id === "string" ? params.id : "";
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "Detalhes">>();
+  const id = route.params.id;
   const { findPlace, updateStatus, removePlace } = usePlaces();
   const place = findPlace(id);
   const showActionError = (message: string) => {
-    if (Platform.OS === "web") window.alert(message);
-    else Alert.alert("Não foi possível concluir", message);
+    Alert.alert("Não foi possível concluir", message);
   };
 
   const handleRemove = async () => {
@@ -24,22 +27,18 @@ export default function PlaceDetailsScreen() {
     const remove = async () => {
       try {
         await removePlace(place.id);
-        router.replace("/(tabs)");
+        navigation.replace("MainTabs");
       } catch (error) {
         showActionError(error instanceof Error ? error.message : "Não foi possível remover o lugar. Tente novamente.");
       }
     };
-    if (Platform.OS === "web") {
-      if (window.confirm(`Remover “${place.name}” do seu diário?`)) await remove();
-      return;
-    }
     Alert.alert("Remover lugar?", `“${place.name}” será apagado do diário.`, [
       { text: "Cancelar", style: "cancel" },
       { text: "Remover", style: "destructive", onPress: () => { void remove(); } },
     ]);
   };
 
-  if (!place) return <ScreenShell><Text style={styles.title}>Lugar não encontrado</Text><ActionButton title="Voltar à lista" icon="arrow-back" onPress={() => router.replace("/(tabs)")} variant="outline" /></ScreenShell>;
+  if (!place) return <ScreenShell><Text style={styles.title}>Lugar não encontrado</Text><ActionButton title="Voltar à lista" icon="arrow-back" onPress={() => navigation.replace("MainTabs")} variant="outline" /></ScreenShell>;
   const markVisited = async () => {
     try {
       await updateStatus(place.id, "Visitado");
@@ -50,7 +49,7 @@ export default function PlaceDetailsScreen() {
 
   return (
     <ScreenShell contentContainerStyle={styles.shell}>
-      <View style={styles.topRow}><Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} style={styles.back}><Ionicons name="arrow-back" size={20} color={colors.text} /></Pressable><Text style={styles.topTitle}>Detalhes do lugar</Text><Pressable accessibilityRole="button" accessibilityLabel="Editar lugar" onPress={() => router.push({ pathname: "/place/new", params: { id: place.id } })} style={styles.edit}><Ionicons name="create-outline" size={19} color={colors.primary} /></Pressable></View>
+      <View style={styles.topRow}><Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => navigation.goBack()} style={styles.back}><Ionicons name="arrow-back" size={20} color={colors.text} /></Pressable><Text style={styles.topTitle}>Detalhes do lugar</Text><Pressable accessibilityRole="button" accessibilityLabel="Editar lugar" onPress={() => navigation.navigate("Cadastro", { id: place.id })} style={styles.edit}><Ionicons name="create-outline" size={19} color={colors.primary} /></Pressable></View>
       <View style={styles.cover}>
         {place.photoUri ? <Image source={{ uri: place.photoUri }} style={styles.coverImage} /> : <View style={styles.coverPlaceholder}><Ionicons name="image-outline" size={34} color={colors.primary} /><Text style={styles.coverHint}>Uma lembrança esperando para ser registrada</Text></View>}
         <View style={styles.coverShade} /><View style={styles.coverContent}><StatusBadge status={place.status} compact /><Text style={styles.title}>{place.name}</Text><View style={styles.cityRow}><Ionicons name="location" size={15} color={colors.primary} /><Text style={styles.city}>{place.city}, {place.state}</Text></View></View>
@@ -59,7 +58,7 @@ export default function PlaceDetailsScreen() {
       <View style={styles.addressCard}><View style={styles.addressIcon}><Ionicons name="navigate-outline" size={18} color={colors.primary} /></View><View style={styles.addressCopy}><Text style={styles.sectionLabel}>ENDEREÇO</Text><Text style={styles.address}>{fullAddress(place)}</Text><Text style={styles.coordinates}>{place.latitude.toFixed(5)}° · {place.longitude.toFixed(5)}°</Text></View></View>
       <View style={styles.section}><View style={styles.mapHeader}><View><Text style={styles.sectionLabel}>NO MAPA</Text><Text style={styles.sectionTitle}>Este é o seu destino</Text></View><Ionicons name="map-outline" size={18} color={colors.primary} /></View><MapSurface places={[place]} currentLocation={null} compact /></View>
       {place.status !== "Visitado" ? <ActionButton title="Marcar como Visitado" icon="checkmark-circle-outline" onPress={markVisited} /> : <View style={styles.visitedNote}><Ionicons name="checkmark-circle" size={18} color={colors.primary} /><Text style={styles.visitedText}>Este lugar já faz parte das suas memórias.</Text></View>}
-      <ActionButton title="Editar lugar" icon="create-outline" onPress={() => router.push({ pathname: "/place/new", params: { id: place.id } })} variant="secondary" />
+      <ActionButton title="Editar lugar" icon="create-outline" onPress={() => navigation.navigate("Cadastro", { id: place.id })} variant="secondary" />
       <ActionButton title="Remover do diário" icon="trash-outline" onPress={() => void handleRemove()} variant="danger" />
     </ScreenShell>
   );
