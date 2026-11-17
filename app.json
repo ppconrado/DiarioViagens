@@ -18,9 +18,6 @@
       },
       "package": "com.diarioviagens"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": [
       "expo-asset",
       [

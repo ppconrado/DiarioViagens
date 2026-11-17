@@ -4,7 +4,6 @@
     "strict": true,
     "types": [
       "node",
-      "nativewind/types",
       "expo/types"
     ],
     "paths": {
@@ -18,10 +17,7 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "**/*.tsx"
   ],
   "exclude": [
     "node_modules",
