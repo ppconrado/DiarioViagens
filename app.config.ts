@@ -9,7 +9,7 @@ const config: ExpoConfig = {
   slug: "diarioviagens",
   version: "1.0.0",
   orientation: "default",
-  icon: "./assets/icon.png",
+  icon: "./assets/images/icon.png",
   scheme: "diarioviagens",
   userInterfaceStyle: "automatic",
   ios: {
@@ -22,7 +22,9 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
+      foregroundImage: "./assets/images/android-icon-foreground.png",
+      backgroundImage: "./assets/images/android-icon-background.png",
+      monochromeImage: "./assets/images/android-icon-monochrome.png",
       backgroundColor: "#ffffff",
     },
     package: "com.diarioviagens",
@@ -65,7 +67,7 @@ const config: ExpoConfig = {
       "expo-splash-screen",
       {
         backgroundColor: "#ffffff",
-        image: "./assets/splash-icon.png",
+        image: "./assets/images/splash-icon.png",
       },
     ],
   ],
