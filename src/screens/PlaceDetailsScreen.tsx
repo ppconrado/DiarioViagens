@@ -10,7 +10,7 @@ import { StatusBadge } from "@/src/components/StatusBadge";
 import { usePlaces } from "@/src/context/PlacesContext";
 import { fullAddress } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
-import type { RootStackParamList } from "@/src/navigation/types";
+import type { RootStackParamList } from "@/src/navigation/navigation-types";
 
 export default function PlaceDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

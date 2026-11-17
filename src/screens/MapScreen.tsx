@@ -7,7 +7,7 @@ import { ScreenShell } from "@/src/components/ScreenShell";
 import { usePlaces } from "@/src/context/PlacesContext";
 import { useLocation } from "@/src/hooks/useLocation";
 import { colors, fonts } from "@/src/theme/colors";
-import type { RootStackParamList } from "@/src/navigation/types";
+import type { RootStackParamList } from "@/src/navigation/navigation-types";
 
 export default function MapScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();

@@ -12,7 +12,7 @@ import { usePlaces } from "@/src/context/PlacesContext";
 import { geocodeAddress } from "@/src/lib/geocoding";
 import type { PlaceDraft, PlaceStatus } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
-import type { RootStackParamList } from "@/src/navigation/types";
+import type { RootStackParamList } from "@/src/navigation/navigation-types";
 
 type FormValues = { name: string; description: string; street: string; number: string; city: string; state: string; status: PlaceStatus; photoUri: string | null };
 const blank: FormValues = { name: "", description: "", street: "", number: "", city: "", state: "", status: "Quero visitar", photoUri: null };

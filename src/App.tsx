@@ -4,7 +4,7 @@ import { Asset } from 'expo-asset';
 import * as SplashScreen from 'expo-splash-screen';
 import { useColorScheme } from 'react-native';
 import { PlacesProvider } from './context/PlacesContext';
-import { Navigation } from './navigation';
+import { AppNavigator } from './navigation/AppNavigator';
 
 Asset.loadAsync([
   ...NavigationAssets,
@@ -21,7 +21,7 @@ export function App() {
 
   return (
     <PlacesProvider>
-      <Navigation
+      <AppNavigator
         theme={theme}
         onReady={() => {
           SplashScreen.hideAsync();

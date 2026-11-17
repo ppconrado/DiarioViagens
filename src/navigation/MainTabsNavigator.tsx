@@ -1,13 +1,13 @@
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import ListScreen from "@/src/screens/ListScreen";
 import MapScreen from "@/src/screens/MapScreen";
 import StatsScreen from "@/src/screens/StatsScreen";
-import type { MainTabParamList } from "@/src/navigation/types";
+import type { MainTabParamList } from "./navigation-types";
 
 const Tabs = createBottomTabNavigator<MainTabParamList>();
 
-export function MainTabs() {
+export function MainTabsNavigator() {
   return (
     <Tabs.Navigator screenOptions={{ headerShown: false }}>
       <Tabs.Screen
