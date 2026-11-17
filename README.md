@@ -1,11 +1,10 @@
 # Starter Template with React Navigation
 
-This is a minimal starter template for React Native apps using Expo and React Navigation.
+This is a mobile-only React Native app using Expo and React Navigation.
 
 It includes the following:
 
 - Example [Native Stack](https://reactnavigation.org/docs/native-stack-navigator) with a nested [Native Bottom Tab](https://reactnavigation.org/docs/native-bottom-tab-navigator) (falls back to [Bottom Tab](https://reactnavigation.org/docs/bottom-tab-navigator) on web)
-- Web support with [React Native for Web](https://necolas.github.io/react-native-web/)
 - TypeScript support and configured for React Navigation
 - Automatic [deep link](https://reactnavigation.org/docs/deep-linking) and [URL handling configuration](https://reactnavigation.org/docs/configuring-links)
 - Theme support [based on system appearance](https://reactnavigation.org/docs/themes/#using-the-operating-system-preferences)
@@ -45,7 +44,7 @@ It includes the following:
   npm run android
   ```
 
-- In the terminal running the development server, press `i` to open the iOS simulator, `a` to open the Android device or emulator, or `w` to open the web browser.
+- In the terminal running the development server, press `i` to open the iOS simulator or `a` to open an Android device or emulator.
 
 ## Notes
 
