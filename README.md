@@ -4,7 +4,7 @@ Aplicativo mobile para registrar lugares que o usuário deseja conhecer ou já
 visitou. O projeto foi desenvolvido com React Native, Expo SDK 58 e
 TypeScript, com foco em funcionamento local no dispositivo.
 
-O diário não depende de backend, autenticação ou serviços Manus. Os dados são
+O diário não depende de backend ou autenticação. Os dados são
 armazenados no próprio dispositivo com `AsyncStorage`.
 
 ## Integrantes
@@ -141,6 +141,15 @@ Os plugins nativos usados na configuração são `expo-location`,
   atual.
 - `MapSurface.native.tsx` renderiza um `MapView` e um `Marker` para cada
   lugar salvo.
+- Os pins dos lugares usam as cores do status: laranja para **Quero visitar**
+  e verde para **Visitado**.
+- Quando a localização do usuário é obtida depois da abertura da tela, o mapa
+  é recentralizado automaticamente nessa posição, com zoom regional. Se a
+  permissão for negada, os lugares salvos continuam disponíveis e o app
+  informa o problema.
+- O mapa compacto da tela de detalhes é centralizado no lugar selecionado e
+  usa um zoom aproximado para visualizar sua região, em vez de mostrar o país
+  inteiro.
 - Tocar em um marcador abre os detalhes do lugar.
 - A aba **Estatísticas** calcula os totais em memória a partir de `places`,
   agrupando por status e por cidade/estado.
