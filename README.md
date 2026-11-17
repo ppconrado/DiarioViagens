@@ -1,64 +1,440 @@
-# Starter Template with React Navigation
+# Diário de Viagens
 
-This is a mobile-only React Native app using Expo and React Navigation.
+Aplicativo mobile para registrar lugares que o usuário deseja conhecer ou já
+visitou. O projeto foi desenvolvido com React Native, Expo SDK 58 e
+TypeScript, com foco em funcionamento local no dispositivo.
 
-It includes the following:
+O diário não depende de backend, autenticação ou serviços Manus. Os dados são
+armazenados no próprio dispositivo com `AsyncStorage`.
 
-- Example [Native Stack](https://reactnavigation.org/docs/native-stack-navigator) with a nested [Native Bottom Tab](https://reactnavigation.org/docs/native-bottom-tab-navigator) (falls back to [Bottom Tab](https://reactnavigation.org/docs/bottom-tab-navigator) on web)
-- TypeScript support and configured for React Navigation
-- Automatic [deep link](https://reactnavigation.org/docs/deep-linking) and [URL handling configuration](https://reactnavigation.org/docs/configuring-links)
-- Theme support [based on system appearance](https://reactnavigation.org/docs/themes/#using-the-operating-system-preferences)
-- Expo [Development Build](https://docs.expo.dev/develop/development-builds/introduction/) with [Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)
+## Integrantes
 
-## Getting Started
+1. **Jose Paulo Archetti Conrado**
 
-1. Create a new project using this template:
+## Funcionalidades
 
-   ```sh
-   npx create-expo-app@latest --template react-navigation/template
-   ```
+- Cadastro de lugares com nome, descrição e endereço.
+- Status do lugar: **Quero visitar** ou **Visitado**.
+- Geocodificação nativa do endereço para latitude e longitude.
+- Exibição dos lugares em mapa nativo.
+- Solicitação da localização atual do dispositivo.
+- Captura de fotos pela câmera.
+- Seleção de fotos da galeria.
+- Salvamento de fotos capturadas na Media Library.
+- Edição, consulta e remoção de lugares.
+- Estatísticas por status e por cidade/estado.
+- Tratamento de permissões, erros de armazenamento e falhas de geocodificação.
 
-2. Edit the `app.json` file to configure the `name`, `slug`, `scheme` and bundle identifiers (`ios.bundleIdentifier` and `android.bundleIdentifier`) for your app.
+## Requisitos
 
-3. Edit the `src/App.tsx` file to start working on your app.
+- Node.js e npm.
+- Dispositivo físico ou emulador Android/iOS.
+- Development Build do Expo para os módulos nativos, como câmera, localização
+  e mapas.
+- Chaves do Google Maps para os respectivos ambientes Android e iOS.
 
-## Running the app
+O projeto não possui suporte web. Os diretórios nativos `android/` e `ios/`
+são gerados pelo Expo quando necessário e não devem ser editados manualmente.
 
-- Install the dependencies:
+## Instalação
 
-  ```sh
-  npm install
-  ```
+```sh
+npm install
+```
 
-- Start the development server:
+Após instalar as dependências, a aplicação pode ser executada em um
+Development Build:
 
-  ```sh
-  npm start
-  ```
+```sh
+npm start
+npm run android
+npm run ios
+```
 
-- Build and run iOS and Android development builds:
+Os comandos `android` e `ios` usam `expo run:android` e `expo run:ios`,
+respectivamente.
 
-  ```sh
-  npm run ios
-  # or
-  npm run android
-  ```
+## Variáveis de ambiente
 
-- In the terminal running the development server, press `i` to open the iOS simulator or `a` to open an Android device or emulator.
+Crie um arquivo `.env` local na raiz do projeto:
 
-## Notes
+```env
+GOOGLE_MAPS_ANDROID_API_KEY=sua_chave_android
+GOOGLE_MAPS_IOS_API_KEY=sua_chave_ios
+```
 
-This project uses a [development build](https://docs.expo.dev/develop/development-builds/introduction/) and cannot be run with [Expo Go](https://expo.dev/go). To run the app with Expo Go, edit the `package.json` file, remove the `expo-dev-client` package and `--dev-client` flag from the `start` script.
+O arquivo `.env` não deve ser versionado. Ele é carregado por
+[`scripts/load-env.js`](./scripts/load-env.js), que:
 
-We highly recommend using the development builds for normal development and testing.
+1. lê `.env` e `.env.local`, quando existirem;
+2. preserva variáveis já definidas pelo sistema;
+3. não imprime valores no terminal;
+4. disponibiliza as chaves somente para a configuração nativa do Expo.
 
-The `ios` and `android` folder are gitignored in the project by default as they are automatically generated during the build process ([Continuous Native Generation](https://docs.expo.dev/workflow/continuous-native-generation/)). This means that you should not edit these folders directly and use [config plugins](https://docs.expo.dev/config-plugins/) instead. However, if you need to edit these folders, you can remove them from the `.gitignore` file so that they are tracked by git.
+As chaves de mapas são inseridas em `ios.config.googleMapsApiKey` e
+`android.config.googleMaps.apiKey` pelo
+[`app.config.ts`](./app.config.ts). Elas são credenciais públicas do aplicativo
+nativo e devem ser restringidas no Google Cloud por plataforma e pacote/bundle
+ID.
 
-## Resources
+## Configuração nativa
 
-- [React Navigation documentation](https://reactnavigation.org/)
-- [Expo documentation](https://docs.expo.dev/)
+O [`app.config.ts`](./app.config.ts) é a fonte única da configuração do Expo.
+Ele define:
 
----
+- nome, slug, esquema e versão do aplicativo;
+- bundle ID iOS `com.diarioviagens`;
+- package Android `com.diarioviagens`;
+- ícone principal e ícones adaptativos;
+- imagem e cor da splash screen;
+- chave do Google Maps em cada plataforma;
+- permissões e mensagens de localização;
+- permissões e mensagens da câmera;
+- acesso à galeria pelo Image Picker;
+- acesso e salvamento de fotos pela Media Library.
 
-Demo assets are from [lucide.dev](https://lucide.dev/)
+Os plugins nativos usados na configuração são `expo-location`,
+`expo-camera`, `expo-image-picker`, `expo-media-library` e
+`expo-splash-screen`.
+
+## Fluxo de funcionamento
+
+### Inicialização
+
+1. [`index.tsx`](./index.tsx) registra o componente raiz com
+   `registerRootComponent`.
+2. [`src/App.tsx`](./src/App.tsx) carrega os assets de navegação e impede que a
+   splash screen desapareça antes da navegação estar pronta.
+3. `App` escolhe o tema claro ou escuro conforme o sistema.
+4. `PlacesProvider` é montado acima do `NavigationContainer`, permitindo que
+   todas as telas acessem os mesmos lugares.
+5. [`AppNavigator.tsx`](./src/navigation/AppNavigator.tsx) monta o Stack
+   Navigator principal.
+6. Quando a navegação termina de carregar, a splash screen é ocultada.
+
+### Cadastro de um lugar
+
+1. O usuário toca em **Adicionar lugar** na lista.
+2. A tela `PlaceFormScreen` valida nome, rua, número, cidade e estado.
+3. O app solicita permissão de localização.
+4. O endereço completo é enviado para `Location.geocodeAsync`.
+5. Se o endereço não for localizado, o cadastro é interrompido e uma mensagem
+   é exibida.
+6. Com coordenadas válidas, o formulário cria um `PlaceDraft`.
+7. `PlacesContext.savePlace` cria um ID, define `createdAt` e persiste o lugar.
+8. Após salvar, a tela retorna para a tela anterior.
+
+### Consulta e edição
+
+- A lista exibe cada lugar em um `PlaceCard`.
+- Ao tocar em um card, a navegação abre `PlaceDetailsScreen`.
+- A tela de detalhes mostra foto, status, endereço, coordenadas e mapa.
+- **Editar lugar** abre o mesmo formulário com o ID do lugar.
+- O contexto identifica o registro existente e o substitui mantendo o ID e a
+  data de criação.
+- **Marcar como Visitado** atualiza somente o status.
+- **Remover do diário** pede confirmação e exclui o registro local.
+
+### Mapa e estatísticas
+
+- A aba **Mapa** usa `useLocation` para solicitar e atualizar a localização
+  atual.
+- `MapSurface.native.tsx` renderiza um `MapView` e um `Marker` para cada
+  lugar salvo.
+- Tocar em um marcador abre os detalhes do lugar.
+- A aba **Estatísticas** calcula os totais em memória a partir de `places`,
+  agrupando por status e por cidade/estado.
+
+## Arquitetura da aplicação
+
+O fluxo geral de dependências é:
+
+```text
+index.tsx
+  └── App
+      ├── PlacesProvider
+      │   └── AsyncStorage
+      └── AppNavigator
+          ├── MainTabsNavigator
+          │   ├── ListScreen
+          │   ├── MapScreen
+          │   └── StatsScreen
+          ├── PlaceFormScreen
+          └── PlaceDetailsScreen
+```
+
+A aplicação usa uma arquitetura de apresentação com estado compartilhado:
+
+- as telas cuidam da interface e das interações;
+- o contexto concentra o estado e a persistência dos lugares;
+- o hook de localização concentra permissões e leitura do GPS;
+- a biblioteca de geocodificação converte endereços em coordenadas;
+- os componentes reutilizáveis encapsulam elementos visuais e ações comuns;
+- os tipos TypeScript definem o contrato dos dados e das rotas.
+
+## Navegação
+
+### Stack Navigator
+
+[`AppNavigator.tsx`](./src/navigation/AppNavigator.tsx) usa
+`createNativeStackNavigator` e define:
+
+| Rota       | Tela                 | Função                           |
+| ---------- | -------------------- | -------------------------------- |
+| `MainTabs` | `MainTabsNavigator`  | Navegação principal por abas     |
+| `Cadastro` | `PlaceFormScreen`    | Criar ou editar um lugar         |
+| `Detalhes` | `PlaceDetailsScreen` | Consultar e administrar um lugar |
+
+### Tab Navigator
+
+[`MainTabsNavigator.tsx`](./src/navigation/MainTabsNavigator.tsx) usa
+`createBottomTabNavigator` e define:
+
+| Aba            | Tela          | Função                                   |
+| -------------- | ------------- | ---------------------------------------- |
+| `Lista`        | `ListScreen`  | Lista, resumo e entrada de novos lugares |
+| `Mapa`         | `MapScreen`   | Mapa, marcadores e localização atual     |
+| `Estatísticas` | `StatsScreen` | Gráficos e totais do diário              |
+
+Os parâmetros são definidos em
+[`navigation-types.ts`](./src/navigation/navigation-types.ts):
+
+- `Cadastro` recebe opcionalmente `{ id }` para edição;
+- `Detalhes` recebe obrigatoriamente `{ id }`;
+- as abas não recebem parâmetros.
+
+As telas usam `useNavigation` e `useRoute` do React Navigation. Não há
+Expo Router no projeto.
+
+## Modelo de dados
+
+O tipo `Place` está em [`src/types/place.ts`](./src/types/place.ts):
+
+```ts
+type Place = {
+  id: string;
+  name: string;
+  description: string;
+  street: string;
+  number: string;
+  city: string;
+  state: string;
+  status: 'Quero visitar' | 'Visitado';
+  photoUri: string | null;
+  latitude: number;
+  longitude: number;
+  createdAt: string;
+};
+```
+
+`PlaceDraft` é usado pelo formulário antes de o ID e a data de criação serem
+definidos pelo contexto.
+
+## Armazenamento de dados
+
+[`PlacesContext.tsx`](./src/context/PlacesContext.tsx) usa
+`@react-native-async-storage/async-storage`.
+
+Chave utilizada:
+
+```text
+diario-de-viagens:places:v1
+```
+
+O valor armazenado é um array JSON de `Place`.
+
+### Carregamento
+
+- O contexto chama `AsyncStorage.getItem` ao montar.
+- O JSON é validado minimamente antes de atualizar o estado.
+- `isLoaded` indica quando a leitura inicial terminou.
+- `storageError` informa falhas de leitura ou impede novas alterações quando o
+  armazenamento está indisponível.
+
+### Persistência
+
+As operações `savePlace`, `updateStatus` e `removePlace` criam um novo array e
+chamam `AsyncStorage.setItem`. O estado React só é atualizado depois que a
+persistência termina com sucesso.
+
+Não existe banco remoto ou sincronização entre dispositivos. A remoção do app
+ou a limpeza dos dados do aplicativo pode apagar o diário.
+
+## Contexto `PlacesContext`
+
+O contexto expõe:
+
+- `places`: lugares carregados;
+- `isLoaded`: status da leitura inicial;
+- `storageError`: erro de persistência ou carregamento;
+- `savePlace(draft)`: cria ou atualiza um lugar;
+- `updateStatus(id, status)`: atualiza o status;
+- `removePlace(id)`: remove um lugar;
+- `findPlace(id)`: localiza um lugar pelo ID.
+
+`usePlaces` lança um erro explícito quando utilizado fora de
+`PlacesProvider`, evitando uma falha silenciosa.
+
+## Hook `useLocation.ts`
+
+[`useLocation.ts`](./src/hooks/useLocation.ts) encapsula:
+
+- solicitação de `requestForegroundPermissionsAsync`;
+- leitura por `getCurrentPositionAsync`;
+- precisão balanceada com `Location.Accuracy.Balanced`;
+- estado de carregamento;
+- indicação de permissão negada;
+- mensagem de erro;
+- atualização manual por `refreshLocation`.
+
+O hook tenta obter a localização uma vez após a montagem da tela e também pode
+ser acionado pelo botão de atualizar da tela de mapa.
+
+## Biblioteca `lib/geocoding.ts`
+
+[`geocoding.ts`](./src/lib/geocoding.ts) possui uma função pequena e
+especializada:
+
+```ts
+geocodeAddress(enderecoCompleto): Promise<Coordinates | null>
+```
+
+Ela usa exclusivamente `Location.geocodeAsync`. O primeiro resultado é
+convertido para `{ latitude, longitude }`; quando nenhum resultado é
+encontrado, retorna `null`. Não existe fallback web ou chamada ao Nominatim.
+
+## Telas (`src/screens`)
+
+### `ListScreen.tsx`
+
+Tela inicial do diário. Exibe:
+
+- marca do aplicativo;
+- botão para novo cadastro;
+- resumo de lugares planejados e visitados;
+- quantidade total;
+- estado de carregamento;
+- mensagem de erro de armazenamento;
+- lista de `PlaceCard`.
+
+### `MapScreen.tsx`
+
+Exibe o mapa nativo, marcadores dos lugares, legenda de status, estado da
+localização e mensagens de permissão ou erro.
+
+### `StatsScreen.tsx`
+
+Calcula e apresenta:
+
+- total de lugares;
+- gráfico de pizza por status;
+- gráfico de barras por cidade e estado;
+- estado vazio quando não existem dados.
+
+### `PlaceFormScreen.tsx`
+
+É usada tanto para criar quanto para editar. Controla os campos do formulário,
+status, foto, validação, permissões, geocodificação, estado de salvamento e
+mensagens de erro.
+
+### `PlaceDetailsScreen.tsx`
+
+Exibe todos os dados de um lugar, incluindo foto, endereço, coordenadas e mapa.
+Também permite marcar como visitado, editar ou remover.
+
+## Componentes (`src/components`)
+
+- `ActionButton.tsx`: botão padronizado com variantes, ícone, loading e estado
+  desabilitado.
+- `BrandMark.tsx`: identidade visual do diário.
+- `CameraModal.tsx`: fluxo de permissão, preview e captura de foto.
+- `MapSurface.native.tsx`: mapa nativo com marcadores.
+- `PhotoField.tsx`: preview, câmera, seleção de galeria e mensagens de erro.
+- `PlaceCard.tsx`: item visual da lista de lugares.
+- `ScreenShell.tsx`: layout comum com `SafeAreaView`, rolagem, espaçamento e
+  fundo do aplicativo.
+- `StatusBadge.tsx`: indicador visual do status do lugar.
+
+## Tema
+
+[`src/theme/colors.ts`](./src/theme/colors.ts) centraliza as cores, fontes,
+contraste, superfícies, bordas e cores de status usadas pelas telas e
+componentes. Isso evita valores visuais espalhados e mantém a identidade
+consistente.
+
+## Arquitetura de pastas
+
+```text
+.
+├── assets/
+│   └── images/                  # Ícones, splash e imagens nativas
+├── scripts/
+│   └── load-env.js             # Carregamento local de .env
+├── src/
+│   ├── App.tsx                 # Tema, splash, provider e navigator
+│   ├── components/             # Componentes reutilizáveis
+│   ├── context/
+│   │   └── PlacesContext.tsx   # Estado e persistência dos lugares
+│   ├── hooks/
+│   │   └── useLocation.ts      # Permissão e localização atual
+│   ├── lib/
+│   │   └── geocoding.ts        # Conversão de endereço em coordenadas
+│   ├── navigation/             # Stack, tabs e tipos de rotas
+│   ├── screens/                # Telas do aplicativo
+│   ├── theme/                  # Cores e fontes
+│   └── types/                  # Tipos do domínio e bibliotecas
+├── app.config.ts               # Configuração Expo nativa
+├── babel.config.js             # Configuração Babel
+├── metro.config.js             # Configuração Metro
+├── package.json                # Scripts e dependências
+└── tsconfig.json               # Configuração TypeScript
+```
+
+## Bibliotecas utilizadas
+
+### Base e plataforma
+
+- `expo`: runtime e ferramentas Expo.
+- `react` e `react-native`: interface e componentes nativos.
+- `typescript`: tipagem estática.
+- `expo-dev-client`: execução em Development Build.
+- `expo-asset`: pré-carregamento de assets.
+- `expo-font`: dependência nativa das fontes e ícones.
+- `expo-splash-screen`: controle da splash screen.
+- `expo-system-ui`: integração visual com o sistema.
+
+### Navegação
+
+- `@react-navigation/native`: `NavigationContainer`, hooks e tipos base.
+- `@react-navigation/native-stack`: Stack Navigator nativo.
+- `@react-navigation/bottom-tabs`: navegação por abas.
+- `@react-navigation/elements`: assets auxiliares da navegação.
+
+### Recursos nativos
+
+- `expo-location`: localização e geocodificação.
+- `react-native-maps`: mapa e marcadores.
+- `expo-camera`: câmera.
+- `expo-image-picker`: seleção de imagens.
+- `expo-media-library`: leitura e salvamento na galeria.
+- `@react-native-async-storage/async-storage`: persistência local.
+- `react-native-safe-area-context`: áreas seguras.
+- `@expo/vector-icons`: ícones Ionicons.
+
+### Gráficos e suporte
+
+- `react-native-svg`: renderização vetorial.
+- `react-native-svg-charts`: gráficos de pizza e barras.
+- `react-native-gesture-handler` e `react-native-screens`: suporte aos
+  navegadores nativos.
+
+## Comandos de validação
+
+```sh
+npx tsc --noEmit
+npx expo lint
+npx expo-doctor
+```
+
+Antes de gerar uma build nativa, confirme que as chaves do Google Maps estão
+configuradas e que as permissões foram declaradas no `app.config.ts`.
