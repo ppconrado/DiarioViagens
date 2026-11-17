@@ -31,10 +31,17 @@ armazenados no próprio dispositivo com `AsyncStorage`.
 - Dispositivo físico ou emulador Android/iOS.
 - Development Build do Expo para os módulos nativos, como câmera, localização
   e mapas.
-- Chaves do Google Maps para os respectivos ambientes Android e iOS.
+- Chave do Google Maps para o Android quando o app for executado em um
+  Development Build ou APK.
 
 O projeto não possui suporte web. Os diretórios nativos `android/` e `ios/`
 são gerados pelo Expo quando necessário e não devem ser editados manualmente.
+
+Durante testes no Expo Go, o `react-native-maps` pode funcionar sem
+configuração adicional. Em um build nativo Android, entretanto, a chave do
+Google Maps deve ser configurada para que o mapa seja exibido corretamente.
+No iOS, a implementação padrão usa Apple Maps e não exige chave; uma chave
+para Google Maps no iOS só é necessária se esse provedor for utilizado.
 
 ## Instalação
 
@@ -63,7 +70,17 @@ GOOGLE_MAPS_ANDROID_API_KEY=sua_chave_android
 GOOGLE_MAPS_IOS_API_KEY=sua_chave_ios
 ```
 
-O arquivo `.env` não deve ser versionado. Ele é carregado por
+Para a execução no Android com Development Build ou APK, a variável
+`GOOGLE_MAPS_ANDROID_API_KEY` é necessária. A variável
+`GOOGLE_MAPS_IOS_API_KEY` só é necessária caso o aplicativo seja configurado
+para usar Google Maps no iOS. O Expo Go pode ser usado para testes sem essas
+variáveis, conforme o ambiente e o provedor de mapas.
+
+O arquivo `.env` não deve ser versionado, e as chaves devem ser restringidas
+no Google Cloud por plataforma, pacote/bundle ID e certificado quando
+aplicável. Elas são credenciais públicas do aplicativo nativo, não segredos
+de backend, mas ainda assim não devem ser expostas desnecessariamente no
+repositório. O arquivo é carregado por
 [`scripts/load-env.js`](./scripts/load-env.js), que:
 
 1. lê `.env` e `.env.local`, quando existirem;
@@ -71,11 +88,13 @@ O arquivo `.env` não deve ser versionado. Ele é carregado por
 3. não imprime valores no terminal;
 4. disponibiliza as chaves somente para a configuração nativa do Expo.
 
-As chaves de mapas são inseridas em `ios.config.googleMapsApiKey` e
-`android.config.googleMaps.apiKey` pelo
-[`app.config.ts`](./app.config.ts). Elas são credenciais públicas do aplicativo
-nativo e devem ser restringidas no Google Cloud por plataforma e pacote/bundle
-ID.
+Quando informadas, as chaves de mapas são inseridas em
+`ios.config.googleMapsApiKey` e `android.config.googleMaps.apiKey` pelo
+[`app.config.ts`](./app.config.ts). Como essa configuração é incorporada ao
+build nativo, é necessário recriar o Development Build ou APK depois de
+alterar as chaves. A localização do usuário e a geocodificação com
+`Location.geocodeAsync` são independentes da chave do Google Maps; a chave
+afeta principalmente a exibição do mapa Android em builds nativos.
 
 ## Configuração nativa
 
