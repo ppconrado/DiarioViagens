@@ -1,4 +1,4 @@
-import { Alert, Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -11,6 +11,7 @@ import { usePlaces } from "@/src/context/PlacesContext";
 import { fullAddress } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
 import type { RootStackParamList } from "@/src/navigation/navigation-types";
+import { PhotoAssetImage } from "@/src/components/PhotoAssetImage";
 
 export default function PlaceDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -51,7 +52,7 @@ export default function PlaceDetailsScreen() {
     <ScreenShell contentContainerStyle={styles.shell}>
       <View style={styles.topRow}><Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => navigation.goBack()} style={styles.back}><Ionicons name="arrow-back" size={20} color={colors.text} /></Pressable><Text style={styles.topTitle}>Detalhes do lugar</Text><Pressable accessibilityRole="button" accessibilityLabel="Editar lugar" onPress={() => navigation.navigate("Cadastro", { id: place.id })} style={styles.edit}><Ionicons name="create-outline" size={19} color={colors.primary} /></Pressable></View>
       <View style={styles.cover}>
-        {place.photoUri ? <Image source={{ uri: place.photoUri }} style={styles.coverImage} /> : <View style={styles.coverPlaceholder}><Ionicons name="image-outline" size={34} color={colors.primary} /><Text style={styles.coverHint}>Uma lembrança esperando para ser registrada</Text></View>}
+        {place.photoAssetId || place.photoUri ? <PhotoAssetImage assetId={place.photoAssetId} legacyUri={place.photoUri} style={styles.coverImage} /> : <View style={styles.coverPlaceholder}><Ionicons name="image-outline" size={34} color={colors.primary} /><Text style={styles.coverHint}>Uma lembrança esperando para ser registrada</Text></View>}
         <View style={styles.coverShade} /><View style={styles.coverContent}><StatusBadge status={place.status} compact /><Text style={styles.title}>{place.name}</Text><View style={styles.cityRow}><Ionicons name="location" size={15} color={colors.primary} /><Text style={styles.city}>{place.city}, {place.state}</Text></View></View>
       </View>
       <View style={styles.section}><Text style={styles.sectionLabel}>SOBRE ESTE LUGAR</Text><Text style={styles.description}>{place.description || "Nenhuma descrição foi adicionada."}</Text></View>

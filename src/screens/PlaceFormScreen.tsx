@@ -14,8 +14,8 @@ import type { PlaceDraft, PlaceStatus } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
 import type { RootStackParamList } from "@/src/navigation/navigation-types";
 
-type FormValues = { name: string; description: string; street: string; number: string; city: string; state: string; status: PlaceStatus; photoUri: string | null };
-const blank: FormValues = { name: "", description: "", street: "", number: "", city: "", state: "", status: "Quero visitar", photoUri: null };
+type FormValues = { name: string; description: string; street: string; number: string; city: string; state: string; status: PlaceStatus; photoAssetId: string | null; photoUri?: string | null };
+const blank: FormValues = { name: "", description: "", street: "", number: "", city: "", state: "", status: "Quero visitar", photoAssetId: null };
 
 export default function PlaceFormScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -24,7 +24,7 @@ export default function PlaceFormScreen() {
   const { isLoaded, storageError, findPlace, savePlace } = usePlaces();
   const existing = editingId ? findPlace(editingId) : undefined;
   const [formOverride, setFormOverride] = useState<FormValues | null>(null);
-  const form = formOverride ?? (existing ? { name: existing.name, description: existing.description, street: existing.street, number: existing.number, city: existing.city, state: existing.state, status: existing.status, photoUri: existing.photoUri } : blank);
+  const form = formOverride ?? (existing ? { name: existing.name, description: existing.description, street: existing.street, number: existing.number, city: existing.city, state: existing.state, status: existing.status, photoAssetId: existing.photoAssetId, photoUri: existing.photoUri } : blank);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -90,7 +90,7 @@ export default function PlaceFormScreen() {
         return <Pressable key={status} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => setField("status", status)} style={[styles.statusOption, selected && styles.statusSelected]}><Ionicons name={status === "Visitado" ? "checkmark-circle-outline" : "bookmark-outline"} size={16} color={selected ? colors.primary : colors.muted} /><Text style={[styles.statusText, selected && styles.statusTextSelected]}>{status}</Text></Pressable>;
       })}</View></View>
 
-      <View style={styles.group}><Text style={styles.label}>Foto do lugar</Text><PhotoField value={form.photoUri} onChange={(uri) => setField("photoUri", uri)} /></View>
+      <View style={styles.group}><Text style={styles.label}>Foto do lugar</Text><PhotoField value={form.photoAssetId} legacyUri={form.photoUri} onChange={(assetId) => { setField("photoAssetId", assetId); setField("photoUri", null); }} /></View>
       {error ? <View accessibilityRole="alert" style={styles.errorBox}><Ionicons name="alert-circle-outline" size={18} color={colors.danger} /><Text style={styles.errorText}>{error}</Text></View> : null}
       <View style={styles.saveNote}><Ionicons name="map-outline" size={15} color={colors.accent} /><Text style={styles.noteText}>O endereço será convertido em latitude e longitude antes de salvar.</Text></View>
       <ActionButton title={saving ? "Localizando endereço…" : editingId ? "Salvar alterações" : "Salvar lugar"} icon={saving ? undefined : "checkmark"} loading={saving} onPress={() => void handleSave()} />

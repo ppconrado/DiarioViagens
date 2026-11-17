@@ -248,7 +248,8 @@ type Place = {
   city: string;
   state: string;
   status: 'Quero visitar' | 'Visitado';
-  photoUri: string | null;
+  photoAssetId: string | null;
+  photoUri?: string | null; // compatibilidade com registros antigos
   latitude: number;
   longitude: number;
   createdAt: string;
@@ -287,6 +288,13 @@ persistência termina com sucesso.
 
 Não existe banco remoto ou sincronização entre dispositivos. A remoção do app
 ou a limpeza dos dados do aplicativo pode apagar o diário.
+
+As fotos novas são salvas na Media Library, e o `Place` guarda somente o
+identificador do asset (`photoAssetId`). Ao exibir a imagem, o app resolve esse
+identificador com `MediaLibrary.getAssetInfoAsync`, sem duplicar o arquivo no
+armazenamento privado. Se o usuário apagar a foto da biblioteca, o app mantém o
+cadastro e exibe o estado sem imagem. Registros antigos podem conter
+`photoUri`, mantido apenas para compatibilidade.
 
 ## Contexto `PlacesContext`
 

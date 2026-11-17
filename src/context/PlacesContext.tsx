@@ -28,7 +28,9 @@ export function PlacesProvider({ children }: PropsWithChildren) {
       .then((raw) => {
         if (!active || !raw) return;
         const parsed = JSON.parse(raw) as Place[];
-        if (Array.isArray(parsed)) setPlaces(parsed);
+        if (Array.isArray(parsed)) {
+          setPlaces(parsed.map((place) => ({ ...place, photoAssetId: place.photoAssetId ?? null })));
+        }
       })
       .catch((error) => {
         console.warn("Não foi possível carregar o diário local.", error);

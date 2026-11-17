@@ -5,7 +5,7 @@ import * as MediaLibrary from "expo-media-library/legacy";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, fonts } from "@/src/theme/colors";
 
-type CameraModalProps = { visible: boolean; onClose: () => void; onCaptured: (uri: string) => void };
+type CameraModalProps = { visible: boolean; onClose: () => void; onCaptured: (assetId: string) => void };
 
 export function CameraModal({ visible, onClose, onCaptured }: CameraModalProps) {
   const cameraRef = useRef<CameraView>(null);
@@ -21,16 +21,13 @@ export function CameraModal({ visible, onClose, onCaptured }: CameraModalProps) 
     try {
       const picture = await cameraRef.current.takePictureAsync({ quality: 0.86 });
       if (!picture?.uri) throw new Error("A câmera não retornou uma foto.");
-      let finalUri = picture.uri;
       const mediaPermission = await MediaLibrary.requestPermissionsAsync(true, ["photo"]);
       if (!mediaPermission.granted) {
         setError("A permissão para salvar na galeria foi negada. Ative o acesso às fotos nas configurações.");
         return;
       }
       const savedAsset = await MediaLibrary.createAssetAsync(picture.uri);
-      const assetInfo = await MediaLibrary.getAssetInfoAsync(savedAsset.id);
-      finalUri = assetInfo.localUri ?? picture.uri;
-      onCaptured(finalUri);
+      onCaptured(savedAsset.id);
     } catch {
       setError("Não foi possível registrar ou salvar a foto. Tente novamente.");
     } finally {

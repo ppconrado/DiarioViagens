@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import * as MediaLibrary from "expo-media-library/legacy";
 import { colors, fonts } from "@/src/theme/colors";
 import { CameraModal } from "@/src/components/CameraModal";
+import { PhotoAssetImage } from "@/src/components/PhotoAssetImage";
 
-export function PhotoField({ value, onChange }: { value: string | null; onChange: (uri: string | null) => void }) {
+export function PhotoField({ value, legacyUri, onChange }: { value: string | null; legacyUri?: string | null; onChange: (assetId: string | null) => void }) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
@@ -22,15 +23,13 @@ export function PhotoField({ value, onChange }: { value: string | null; onChange
       }
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], allowsEditing: true, quality: 0.85 });
       if (result.canceled || !result.assets?.[0]) return;
-      let uri = result.assets[0].uri;
-      if (result.assets[0].assetId) {
-        const asset = await MediaLibrary.getAssetInfoAsync(result.assets[0].assetId);
-        uri = asset.localUri ?? uri;
+      const selectedAssetId = result.assets[0].assetId;
+      if (selectedAssetId) {
+        onChange(selectedAssetId);
+        return;
       }
-      if (uri.startsWith("ph://")) {
-        throw new Error("Não foi possível preparar a foto para exibição neste dispositivo.");
-      }
-      onChange(uri);
+      const asset = await MediaLibrary.createAssetAsync(result.assets[0].uri);
+      onChange(asset.id);
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Não foi possível abrir a galeria. Tente novamente.");
     } finally {
@@ -41,7 +40,7 @@ export function PhotoField({ value, onChange }: { value: string | null; onChange
   return (
     <View style={styles.container}>
       <View style={styles.previewWrap}>
-        {value ? <Image source={{ uri: value }} style={styles.preview} /> : <View style={styles.placeholder}><Ionicons name="images-outline" size={32} color={colors.primary} /><Text style={styles.placeholderText}>Uma lembrança visual deixa a viagem ainda mais sua.</Text></View>}
+        {value || legacyUri ? <PhotoAssetImage assetId={value} legacyUri={legacyUri} style={styles.preview} /> : <View style={styles.placeholder}><Ionicons name="images-outline" size={32} color={colors.primary} /><Text style={styles.placeholderText}>Uma lembrança visual deixa a viagem ainda mais sua.</Text></View>}
       </View>
       <View style={styles.actions}>
         <Pressable accessibilityRole="button" disabled={working} onPress={() => { setError(null); setCameraOpen(true); }} style={styles.photoButton}>
@@ -52,7 +51,7 @@ export function PhotoField({ value, onChange }: { value: string | null; onChange
         </Pressable>
       </View>
       {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
-      <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} onCaptured={(uri) => { onChange(uri); setCameraOpen(false); }} />
+      <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} onCaptured={(assetId) => { onChange(assetId); setCameraOpen(false); }} />
     </View>
   );
 }
