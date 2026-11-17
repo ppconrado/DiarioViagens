@@ -1,5 +1,6 @@
 import MapView, { Marker } from "react-native-maps";
 import type { Coordinates } from "@/src/hooks/useLocation";
+import { colors } from "@/src/theme/colors";
 import type { Place } from "@/src/types/place";
 
 type MapSurfaceProps = {
@@ -26,6 +27,7 @@ export default function MapSurface({ places, currentLocation, onSelectPlace, com
           coordinate={{ latitude: place.latitude, longitude: place.longitude }}
           title={place.name}
           description={place.city}
+          pinColor={place.status === "Visitado" ? colors.visited : colors.planned}
           onPress={() => onSelectPlace?.(place.id)}
         />
       ))}
