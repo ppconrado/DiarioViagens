@@ -17,8 +17,25 @@ export function AppNavigator({ theme, onReady }: AppNavigatorProps) {
     <NavigationContainer theme={theme} onReady={onReady}>
       <Stack.Navigator>
         <Stack.Screen name="MainTabs" component={MainTabsNavigator} options={{ headerShown: false }} />
-        <Stack.Screen name="Cadastro" component={PlaceFormScreen} options={{ title: "Cadastro" }} />
-        <Stack.Screen name="Detalhes" component={PlaceDetailsScreen} options={{ title: "Detalhes" }} />
+        <Stack.Screen
+          name="Cadastro"
+          component={PlaceFormScreen}
+          options={{
+            headerShown: false,
+            presentation: "modal",
+            animation: "slide_from_bottom",
+            gestureEnabled: true,
+          }}
+        />
+        <Stack.Screen
+          name="Detalhes"
+          component={PlaceDetailsScreen}
+          options={{
+            headerShown: false,
+            animation: "slide_from_right",
+            gestureEnabled: true,
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -29,7 +29,10 @@ export function PlacesProvider({ children }: PropsWithChildren) {
         if (!active || !raw) return;
         const parsed = JSON.parse(raw) as Place[];
         if (Array.isArray(parsed)) {
-          setPlaces(parsed.map((place) => ({ ...place, photoAssetId: place.photoAssetId ?? null })));
+          setPlaces(parsed.map((place) => ({
+            ...place,
+            photoAssetId: place.photoAssetId ?? null,
+          })));
         }
       })
       .catch((error) => {

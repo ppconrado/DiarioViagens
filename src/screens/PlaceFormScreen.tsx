@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,7 +14,7 @@ import type { PlaceDraft, PlaceStatus } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
 import type { RootStackParamList } from "@/src/navigation/navigation-types";
 
-type FormValues = { name: string; description: string; street: string; number: string; city: string; state: string; status: PlaceStatus; photoAssetId: string | null; photoUri?: string | null };
+type FormValues = { name: string; description: string; street: string; number: string; city: string; state: string; status: PlaceStatus; photoAssetId: string | null };
 const blank: FormValues = { name: "", description: "", street: "", number: "", city: "", state: "", status: "Quero visitar", photoAssetId: null };
 
 export default function PlaceFormScreen() {
@@ -24,9 +24,39 @@ export default function PlaceFormScreen() {
   const { isLoaded, storageError, findPlace, savePlace } = usePlaces();
   const existing = editingId ? findPlace(editingId) : undefined;
   const [formOverride, setFormOverride] = useState<FormValues | null>(null);
-  const form = formOverride ?? (existing ? { name: existing.name, description: existing.description, street: existing.street, number: existing.number, city: existing.city, state: existing.state, status: existing.status, photoAssetId: existing.photoAssetId, photoUri: existing.photoUri } : blank);
+  const form = formOverride ?? (existing ? { name: existing.name, description: existing.description, street: existing.street, number: existing.number, city: existing.city, state: existing.state, status: existing.status, photoAssetId: existing.photoAssetId } : blank);
+  const initialForm = useMemo<FormValues>(() => existing ? { name: existing.name, description: existing.description, street: existing.street, number: existing.number, city: existing.city, state: existing.state, status: existing.status, photoAssetId: existing.photoAssetId } : blank, [existing]);
+  const isDirty = JSON.stringify(form) !== JSON.stringify(initialForm);
+  const allowNextRemove = useRef(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("beforeRemove", (event) => {
+      if (!isDirty || allowNextRemove.current) {
+        allowNextRemove.current = false;
+        return;
+      }
+      event.preventDefault();
+      const discard = () => {
+        allowNextRemove.current = true;
+        navigation.dispatch(event.data.action);
+      };
+      if (Platform.OS === "web") {
+        if (window.confirm("Descartar as alterações deste lugar?")) discard();
+        return;
+      }
+      Alert.alert(
+        "Descartar alterações?",
+        "As informações não salvas serão perdidas.",
+        [
+          { text: "Continuar editando", style: "cancel" },
+          { text: "Descartar", style: "destructive", onPress: discard },
+        ],
+      );
+    });
+    return unsubscribe;
+  }, [navigation, isDirty]);
 
   const setField = <K extends keyof FormValues>(key: K, value: FormValues[K]) => setFormOverride((current) => ({ ...(current ?? form), [key]: value }));
 
@@ -39,10 +69,12 @@ export default function PlaceFormScreen() {
     const enderecoCompleto = `${form.street.trim()}, ${form.number.trim()}, ${form.city.trim()}, ${form.state.trim()}, Brasil`;
     setSaving(true);
     try {
-      const permission = await Location.requestForegroundPermissionsAsync();
-      if (!permission.granted) {
-        setError("A permissão de localização foi negada. Ela é necessária para converter o endereço em coordenadas e cadastrar o lugar.");
-        return;
+      if (Platform.OS !== "web") {
+        const permission = await Location.requestForegroundPermissionsAsync();
+        if (!permission.granted) {
+          setError("A permissão de localização foi negada. Ela é necessária para converter o endereço em coordenadas e cadastrar o lugar.");
+          return;
+        }
       }
       const coordinates = await geocodeAddress(enderecoCompleto);
       if (!coordinates || !Number.isFinite(coordinates.latitude) || !Number.isFinite(coordinates.longitude)) {
@@ -56,6 +88,7 @@ export default function PlaceFormScreen() {
         latitude: coordinates.latitude, longitude: coordinates.longitude,
       };
       await savePlace(draft);
+      allowNextRemove.current = true;
       navigation.goBack();
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Não foi possível localizar ou salvar o endereço. Tente novamente.");
@@ -75,6 +108,10 @@ export default function PlaceFormScreen() {
   }
 
   return (
+    <KeyboardAvoidingView
+      style={styles.keyboardAvoider}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
     <ScreenShell contentContainerStyle={styles.shell}>
       <View style={styles.topRow}><Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => navigation.goBack()} style={styles.back}><Ionicons name="arrow-back" size={20} color={colors.text} /></Pressable><View style={styles.heading}><Text style={styles.eyebrow}>{editingId ? "ATUALIZE A LEMBRANÇA" : "GUARDE UM NOVO DESTINO"}</Text><Text style={styles.title}>{editingId ? "Editar lugar" : "Novo lugar"}</Text></View><View style={styles.spacer} /></View>
       <View style={styles.intro}><Ionicons name="navigate-outline" size={17} color={colors.primary} /><Text style={styles.introText}>Um endereço completo ajuda a encontrar o lugar no mapa.</Text></View>
@@ -90,11 +127,12 @@ export default function PlaceFormScreen() {
         return <Pressable key={status} accessibilityRole="button" accessibilityState={{ selected }} onPress={() => setField("status", status)} style={[styles.statusOption, selected && styles.statusSelected]}><Ionicons name={status === "Visitado" ? "checkmark-circle-outline" : "bookmark-outline"} size={16} color={selected ? colors.primary : colors.muted} /><Text style={[styles.statusText, selected && styles.statusTextSelected]}>{status}</Text></Pressable>;
       })}</View></View>
 
-      <View style={styles.group}><Text style={styles.label}>Foto do lugar</Text><PhotoField value={form.photoAssetId} legacyUri={form.photoUri} onChange={(assetId) => { setField("photoAssetId", assetId); setField("photoUri", null); }} /></View>
+      <View style={styles.group}><Text style={styles.label}>Foto do lugar</Text><PhotoField value={form.photoAssetId} onChange={(assetId) => setField("photoAssetId", assetId)} /></View>
       {error ? <View accessibilityRole="alert" style={styles.errorBox}><Ionicons name="alert-circle-outline" size={18} color={colors.danger} /><Text style={styles.errorText}>{error}</Text></View> : null}
       <View style={styles.saveNote}><Ionicons name="map-outline" size={15} color={colors.accent} /><Text style={styles.noteText}>O endereço será convertido em latitude e longitude antes de salvar.</Text></View>
       <ActionButton title={saving ? "Localizando endereço…" : editingId ? "Salvar alterações" : "Salvar lugar"} icon={saving ? undefined : "checkmark"} loading={saving} onPress={() => void handleSave()} />
     </ScreenShell>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -103,6 +141,7 @@ function Field({ label, value, onChangeText, placeholder, multiline = false, key
 }
 
 const styles = StyleSheet.create({
+  keyboardAvoider: { flex: 1 },
   shell: { gap: 17 },
   topRow: { flexDirection: "row", alignItems: "center", gap: 13 },
   back: { width: 42, height: 42, borderRadius: 15, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceRaised, borderWidth: 1, borderColor: colors.border },

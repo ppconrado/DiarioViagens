@@ -4,12 +4,11 @@ import * as MediaLibrary from "expo-media-library/legacy";
 
 type PhotoAssetImageProps = {
   assetId: string | null;
-  legacyUri?: string | null;
   style: StyleProp<ImageStyle>;
 };
 
-export function PhotoAssetImage({ assetId, legacyUri, style }: PhotoAssetImageProps) {
-  const [resolvedUri, setResolvedUri] = useState<string | null>(null);
+export function PhotoAssetImage({ assetId, style }: PhotoAssetImageProps) {
+  const [resolved, setResolved] = useState<{ assetId: string; uri: string } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -17,15 +16,16 @@ export function PhotoAssetImage({ assetId, legacyUri, style }: PhotoAssetImagePr
 
     MediaLibrary.getAssetInfoAsync(assetId)
       .then((asset) => {
-        if (active) setResolvedUri(asset.localUri ?? asset.uri ?? legacyUri ?? null);
+        const uri = asset.localUri ?? asset.uri ?? null;
+        if (active && uri) setResolved({ assetId, uri });
       })
       .catch(() => {
-        if (active) setResolvedUri(legacyUri ?? null);
+        if (active) setResolved(null);
       });
 
     return () => { active = false; };
-  }, [assetId, legacyUri]);
+  }, [assetId]);
 
-  const uri = assetId ? resolvedUri : legacyUri ?? null;
+  const uri = assetId && resolved?.assetId === assetId ? resolved.uri : null;
   return uri ? <Image source={{ uri }} style={style} /> : null;
 }

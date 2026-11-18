@@ -10,8 +10,6 @@ export type Place = {
   state: string;
   status: PlaceStatus;
   photoAssetId: string | null;
-  /** URI usada por registros antigos, antes da migração para Media Library. */
-  photoUri?: string | null;
   latitude: number;
   longitude: number;
   createdAt: string;

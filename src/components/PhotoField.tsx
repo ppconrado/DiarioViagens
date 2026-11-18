@@ -7,7 +7,7 @@ import { colors, fonts } from "@/src/theme/colors";
 import { CameraModal } from "@/src/components/CameraModal";
 import { PhotoAssetImage } from "@/src/components/PhotoAssetImage";
 
-export function PhotoField({ value, legacyUri, onChange }: { value: string | null; legacyUri?: string | null; onChange: (assetId: string | null) => void }) {
+export function PhotoField({ value, onChange }: { value: string | null; onChange: (assetId: string | null) => void }) {
   const [cameraOpen, setCameraOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [working, setWorking] = useState(false);
@@ -40,7 +40,7 @@ export function PhotoField({ value, legacyUri, onChange }: { value: string | nul
   return (
     <View style={styles.container}>
       <View style={styles.previewWrap}>
-        {value || legacyUri ? <PhotoAssetImage assetId={value} legacyUri={legacyUri} style={styles.preview} /> : <View style={styles.placeholder}><Ionicons name="images-outline" size={32} color={colors.primary} /><Text style={styles.placeholderText}>Uma lembrança visual deixa a viagem ainda mais sua.</Text></View>}
+        {value ? <PhotoAssetImage assetId={value} style={styles.preview} /> : <View style={styles.placeholder}><Ionicons name="images-outline" size={32} color={colors.primary} /><Text style={styles.placeholderText}>Uma lembrança visual deixa a viagem ainda mais sua.</Text></View>}
       </View>
       <View style={styles.actions}>
         <Pressable accessibilityRole="button" disabled={working} onPress={() => { setError(null); setCameraOpen(true); }} style={styles.photoButton}>
@@ -50,6 +50,7 @@ export function PhotoField({ value, legacyUri, onChange }: { value: string | nul
           <Ionicons name="images-outline" size={17} color={colors.primary} /><Text style={styles.buttonText}>{working ? "Abrindo…" : "Galeria"}</Text>
         </Pressable>
       </View>
+      {value ? <Pressable accessibilityRole="button" disabled={working} onPress={() => onChange(null)} style={styles.removeButton}><Ionicons name="trash-outline" size={16} color={colors.danger} /><Text style={styles.removeText}>Remover foto</Text></Pressable> : null}
       {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
       <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} onCaptured={(assetId) => { onChange(assetId); setCameraOpen(false); }} />
     </View>
@@ -65,5 +66,7 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 10 },
   photoButton: { flex: 1, minHeight: 48, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, borderRadius: 15, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surfaceRaised },
   buttonText: { color: colors.text, fontFamily: fonts.medium, fontSize: 12 },
+  removeButton: { minHeight: 42, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 7, borderRadius: 14, borderWidth: 1, borderColor: "#EF777744", backgroundColor: "#EF77770D" },
+  removeText: { color: colors.danger, fontFamily: fonts.medium, fontSize: 11 },
   error: { color: colors.danger, fontFamily: fonts.regular, fontSize: 11, lineHeight: 17 },
 });

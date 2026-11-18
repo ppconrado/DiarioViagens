@@ -8,8 +8,8 @@ import { PhotoAssetImage } from "@/src/components/PhotoAssetImage";
 export function PlaceCard({ place, onPress }: { place: Place; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
-      {place.photoAssetId || place.photoUri ? (
-        <PhotoAssetImage assetId={place.photoAssetId} legacyUri={place.photoUri} style={styles.photo} />
+      {place.photoAssetId ? (
+        <PhotoAssetImage assetId={place.photoAssetId} style={styles.photo} />
       ) : (
         <View style={[styles.photo, styles.photoPlaceholder]}><Ionicons name="image-outline" size={24} color={colors.subtle} /></View>
       )}

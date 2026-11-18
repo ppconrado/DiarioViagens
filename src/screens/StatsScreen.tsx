@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import { BarChart, PieChart } from "react-native-svg-charts";
 import { Ionicons } from "@expo/vector-icons";
+import { Circle, Svg } from "react-native-svg";
 import { ScreenShell } from "@/src/components/ScreenShell";
 import { usePlaces } from "@/src/context/PlacesContext";
 import { colors, fonts } from "@/src/theme/colors";
@@ -22,16 +22,11 @@ export default function StatsScreen() {
     return { byStatus, byCity: [...byCity.entries()].sort((a, b) => b[1] - a[1]) };
   }, [places]);
 
-  const pieData = useMemo(() => ([
-    { key: "planned", label: "Quero visitar", value: stats.byStatus["Quero visitar"], svg: { fill: colors.accent } },
-    { key: "visited", label: "Visitado", value: stats.byStatus.Visitado, svg: { fill: colors.primary } },
-  ].filter((item) => item.value > 0)), [stats]);
-
-  const cityData = useMemo(() => stats.byCity.map(([label, value], index) => ({
-    label,
-    value,
-    svg: { fill: [colors.primary, colors.accent, "#7999E8", "#D98CC1", "#70C9A0", "#EE8D62"][index % 6] },
-  })), [stats]);
+  const cityData = useMemo(() => stats.byCity, [stats]);
+  const plannedShare = places.length ? stats.byStatus["Quero visitar"] / places.length : 0;
+  const visitedShare = places.length ? stats.byStatus.Visitado / places.length : 0;
+  const ringRadius = 56;
+  const ringCircumference = 2 * Math.PI * ringRadius;
 
   return (
     <ScreenShell>
@@ -42,7 +37,18 @@ export default function StatsScreen() {
         <View style={styles.cardHeading}><View><Text style={styles.cardEyebrow}>STATUS</Text><Text style={styles.cardTitle}>O que vem pela frente?</Text></View><Ionicons name="pie-chart-outline" size={19} color={colors.primary} /></View>
         {places.length ? (
           <View style={styles.pieRow}>
-            <PieChart style={styles.pie} data={pieData} valueAccessor={({ item }) => item.value} innerRadius="62%" outerRadius="88%" padAngle={0.025} />
+            <View style={styles.pie}>
+              <Svg width={148} height={148} viewBox="0 0 148 148">
+                <Circle cx={74} cy={74} r={ringRadius} fill="none" stroke={colors.surfaceRaised} strokeWidth={18} />
+                {plannedShare > 0 ? (
+                  <Circle cx={74} cy={74} r={ringRadius} fill="none" stroke={colors.accent} strokeWidth={18} strokeLinecap="butt" strokeDasharray={`${ringCircumference * plannedShare} ${ringCircumference}`} transform="rotate(-90 74 74)" />
+                ) : null}
+                {visitedShare > 0 ? (
+                  <Circle cx={74} cy={74} r={ringRadius} fill="none" stroke={colors.primary} strokeWidth={18} strokeLinecap="butt" strokeDasharray={`${ringCircumference * visitedShare} ${ringCircumference}`} strokeDashoffset={-ringCircumference * plannedShare} transform="rotate(-90 74 74)" />
+                ) : null}
+              </Svg>
+              <View style={styles.pieCenter}><Text style={styles.pieValue}>{places.length}</Text><Text style={styles.pieLabel}>lugares</Text></View>
+            </View>
             <View style={styles.legend}>
               {(["Quero visitar", "Visitado"] as PlaceStatus[]).map((status) => (
                 <View key={status} style={styles.legendLine}><View style={[styles.legendDot, { backgroundColor: statusColors[status] }]} /><View style={styles.legendCopy}><Text style={styles.legendLabel}>{status}</Text><Text style={styles.legendValue}>{stats.byStatus[status]} {stats.byStatus[status] === 1 ? "lugar" : "lugares"}</Text></View></View>
@@ -57,8 +63,15 @@ export default function StatsScreen() {
         <View style={styles.cardHeading}><View><Text style={styles.cardEyebrow}>DESTINOS</Text><Text style={styles.cardTitle}>Lugares por cidade</Text></View><Ionicons name="bar-chart-outline" size={19} color={colors.primary} /></View>
         {cityData.length ? (
           <>
-            <BarChart style={styles.bars} data={cityData} yAccessor={({ item }) => item.value} contentInset={{ top: 14, bottom: 10 }} gridMin={0} spacingInner={0.35} svg={{ fill: colors.primary }} />
-            <View style={styles.cityRows}>{cityData.map((city) => <View key={city.label} style={styles.cityRow}><Text style={styles.cityName} numberOfLines={1}>{city.label}</Text><Text style={styles.cityCount}>{city.value}</Text></View>)}</View>
+            <View style={styles.cityBars}>{cityData.slice(0, 6).map(([label, value], index) => {
+              const maxValue = cityData[0][1];
+              return (
+                <View key={label} style={styles.cityBarRow}>
+                  <View style={styles.cityBarHeading}><Text style={styles.cityName} numberOfLines={1}>{label}</Text><Text style={styles.cityCount}>{value}</Text></View>
+                  <View style={styles.cityBarTrack}><View style={[styles.cityBarFill, { width: `${Math.max((value / maxValue) * 100, 8)}%`, backgroundColor: [colors.primary, colors.accent, "#7999E8", "#D98CC1", "#70C9A0", "#EE8D62"][index] }]} /></View>
+                </View>
+              );
+            })}</View>
           </>
         ) : <EmptyChart message="As cidades aparecem aqui quando você cadastrar seus destinos." />}
       </View>
@@ -88,7 +101,10 @@ const styles = StyleSheet.create({
   cardEyebrow: { color: colors.subtle, fontFamily: fonts.semibold, letterSpacing: 1.6, fontSize: 8 },
   cardTitle: { color: colors.text, fontFamily: fonts.semibold, fontSize: 14, marginTop: 5 },
   pieRow: { minHeight: 156, flexDirection: "row", alignItems: "center", gap: 12 },
-  pie: { width: 148, height: 148 },
+  pie: { width: 148, height: 148, alignItems: "center", justifyContent: "center" },
+  pieCenter: { position: "absolute", alignItems: "center" },
+  pieValue: { color: colors.text, fontFamily: fonts.bold, fontSize: 21 },
+  pieLabel: { color: colors.muted, fontFamily: fonts.regular, fontSize: 9, marginTop: 2 },
   legend: { flex: 1, gap: 14 },
   legendLine: { flexDirection: "row", alignItems: "flex-start", gap: 8 },
   legendDot: { width: 9, height: 9, borderRadius: 6, marginTop: 3 },
@@ -96,11 +112,13 @@ const styles = StyleSheet.create({
   legendLabel: { color: colors.text, fontFamily: fonts.medium, fontSize: 10 },
   legendValue: { color: colors.muted, fontFamily: fonts.regular, fontSize: 9, marginTop: 4 },
   share: { color: colors.subtle, fontFamily: fonts.regular, fontSize: 9 },
-  bars: { height: 166 },
-  cityRows: { gap: 8 },
-  cityRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 8 },
+  cityBars: { gap: 11 },
+  cityBarRow: { gap: 6 },
+  cityBarHeading: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   cityName: { color: colors.muted, fontFamily: fonts.medium, fontSize: 9, flex: 1 },
   cityCount: { color: colors.text, fontFamily: fonts.semibold, fontSize: 10, marginLeft: 12 },
+  cityBarTrack: { height: 8, borderRadius: 5, overflow: "hidden", backgroundColor: colors.surfaceRaised },
+  cityBarFill: { height: "100%", borderRadius: 5 },
   empty: { minHeight: 136, alignItems: "center", justifyContent: "center", gap: 10, paddingHorizontal: 26 },
   emptyText: { color: colors.muted, fontFamily: fonts.regular, fontSize: 10, textAlign: "center", lineHeight: 16 },
   footnote: { color: colors.subtle, fontFamily: fonts.regular, fontSize: 9, textAlign: "center", marginTop: -5 },

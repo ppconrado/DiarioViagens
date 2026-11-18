@@ -13,7 +13,12 @@ export function ScreenShell({ children, scroll = true, contentContainerStyle, fo
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={styles.safe}>
       {scroll ? (
-        <ScrollView contentContainerStyle={[styles.content, contentContainerStyle]} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={[styles.content, contentContainerStyle]}
+          showsVerticalScrollIndicator={false}
+          keyboardDismissMode="on-drag"
+          keyboardShouldPersistTaps="handled"
+        >
           {children}
         </ScrollView>
       ) : (
