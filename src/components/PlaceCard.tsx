@@ -1,15 +1,14 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { Place } from "@/src/types/place";
 import { colors, fonts } from "@/src/theme/colors";
 import { StatusBadge } from "@/src/components/StatusBadge";
-import { PhotoAssetImage } from "@/src/components/PhotoAssetImage";
 
 export function PlaceCard({ place, onPress }: { place: Place; onPress: () => void }) {
   return (
     <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
-      {place.photoAssetId ? (
-        <PhotoAssetImage assetId={place.photoAssetId} style={styles.photo} />
+      {place.photoUri ? (
+        <Image source={{ uri: place.photoUri }} style={styles.photo} />
       ) : (
         <View style={[styles.photo, styles.photoPlaceholder]}><Ionicons name="image-outline" size={24} color={colors.subtle} /></View>
       )}

@@ -9,7 +9,7 @@ export type Place = {
   city: string;
   state: string;
   status: PlaceStatus;
-  photoAssetId: string | null;
+  photoUri: string | null;
   latitude: number;
   longitude: number;
   createdAt: string;

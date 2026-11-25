@@ -31,7 +31,7 @@ export function PlacesProvider({ children }: PropsWithChildren) {
         if (Array.isArray(parsed)) {
           setPlaces(parsed.map((place) => ({
             ...place,
-            photoAssetId: place.photoAssetId ?? null,
+            photoUri: place.photoUri ?? null,
           })));
         }
       })

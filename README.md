@@ -20,10 +20,16 @@ armazenados no próprio dispositivo com `AsyncStorage`.
 - Solicitação da localização atual do dispositivo.
 - Captura de fotos pela câmera.
 - Seleção de fotos da galeria.
-- Salvamento de fotos capturadas na Media Library.
+- Captura e salvamento de fotos pela câmera na Media Library.
+- Seleção de fotos da galeria com recorte no próprio seletor.
+- Armazenamento do URI da foto selecionada ou capturada no lugar.
+- Remoção da foto selecionada diretamente no formulário.
 - Edição, consulta e remoção de lugares.
-- Estatísticas por status e por cidade/estado.
+- Cadastro em modal, com gesto de fechamento por swipe no dispositivo.
+- Confirmação antes de descartar alterações não salvas.
+- Estatísticas por status e por cidade/estado usando componentes nativos com SVG.
 - Tratamento de permissões, erros de armazenamento e falhas de geocodificação.
+- Adaptação do formulário ao teclado com fechamento ao arrastar o scroll.
 
 ## Requisitos
 
@@ -60,6 +66,14 @@ npm run ios
 
 Os comandos `android` e `ios` usam `expo run:android` e `expo run:ios`,
 respectivamente.
+
+Para verificar se as dependências estão alinhadas ao Expo SDK 58:
+
+```sh
+npx expo install --check
+npx expo lint
+npx tsc --noEmit
+```
 
 ## Variáveis de ambiente
 
@@ -135,13 +149,18 @@ Os plugins nativos usados na configuração são `expo-location`,
 
 1. O usuário toca em **Adicionar lugar** na lista.
 2. A tela `PlaceFormScreen` valida nome, rua, número, cidade e estado.
-3. O app solicita permissão de localização.
+3. Em dispositivos móveis, o app solicita permissão de localização.
 4. O endereço completo é enviado para `Location.geocodeAsync`.
 5. Se o endereço não for localizado, o cadastro é interrompido e uma mensagem
    é exibida.
 6. Com coordenadas válidas, o formulário cria um `PlaceDraft`.
 7. `PlacesContext.savePlace` cria um ID, define `createdAt` e persiste o lugar.
 8. Após salvar, a tela retorna para a tela anterior.
+
+O formulário é apresentado como modal inferior. Arrastar para baixo ou usar o
+botão de voltar fecha a tela. Se houver alterações não salvas, o app pergunta
+se elas devem ser descartadas. A rolagem fecha o teclado e o layout se adapta
+ao teclado no iOS.
 
 ### Consulta e edição
 
@@ -213,6 +232,11 @@ A aplicação usa uma arquitetura de apresentação com estado compartilhado:
 | `Cadastro` | `PlaceFormScreen`    | Criar ou editar um lugar         |
 | `Detalhes` | `PlaceDetailsScreen` | Consultar e administrar um lugar |
 
+O cadastro é apresentado como modal com animação `slide_from_bottom` e gesto
+nativo habilitado. A tela de detalhes usa animação `slide_from_right`. Ambas
+ocupam uma rota própria da stack nativa e ocultam o cabeçalho padrão,
+preservando os cabeçalhos internos desenhados pelas telas.
+
 ### Tab Navigator
 
 [`MainTabsNavigator.tsx`](./src/navigation/MainTabsNavigator.tsx) usa
@@ -248,8 +272,7 @@ type Place = {
   city: string;
   state: string;
   status: 'Quero visitar' | 'Visitado';
-  photoAssetId: string | null;
-  photoUri?: string | null; // compatibilidade com registros antigos
+  photoUri: string | null;
   latitude: number;
   longitude: number;
   createdAt: string;
@@ -289,12 +312,10 @@ persistência termina com sucesso.
 Não existe banco remoto ou sincronização entre dispositivos. A remoção do app
 ou a limpeza dos dados do aplicativo pode apagar o diário.
 
-As fotos novas são salvas na Media Library, e o `Place` guarda somente o
-identificador do asset (`photoAssetId`). Ao exibir a imagem, o app resolve esse
-identificador com `MediaLibrary.getAssetInfoAsync`, sem duplicar o arquivo no
-armazenamento privado. Se o usuário apagar a foto da biblioteca, o app mantém o
-cadastro e exibe o estado sem imagem. Registros antigos podem conter
-`photoUri`, mantido apenas para compatibilidade.
+As fotos capturadas pela câmera são salvas na Media Library e o URI resultante
+é armazenado no `Place`. Fotos escolhidas na galeria reutilizam o URI informado
+pelo Image Picker ou resolvido a partir do asset selecionado, sem criar uma
+cópia automática. O formulário permite remover a foto de um lugar.
 
 ## Contexto `PlacesContext`
 
@@ -363,8 +384,8 @@ localização e mensagens de permissão ou erro.
 Calcula e apresenta:
 
 - total de lugares;
-- gráfico de pizza por status;
-- gráfico de barras por cidade e estado;
+- anel de distribuição por status implementado com `react-native-svg`;
+- barras por cidade e estado implementadas com componentes nativos;
 - estado vazio quando não existem dados.
 
 ### `PlaceFormScreen.tsx`
@@ -388,7 +409,7 @@ Também permite marcar como visitado, editar ou remover.
 - `PhotoField.tsx`: preview, câmera, seleção de galeria e mensagens de erro.
 - `PlaceCard.tsx`: item visual da lista de lugares.
 - `ScreenShell.tsx`: layout comum com `SafeAreaView`, rolagem, espaçamento e
-  fundo do aplicativo.
+  fundo do aplicativo. Também fecha o teclado ao arrastar o conteúdo.
 - `StatusBadge.tsx`: indicador visual do status do lugar.
 
 ## Tema
@@ -434,6 +455,7 @@ consistente.
 - `react` e `react-native`: interface e componentes nativos.
 - `typescript`: tipagem estática.
 - `expo-dev-client`: execução em Development Build.
+- `babel-preset-expo`: preset Babel compatível com a transformação do Expo SDK.
 - `expo-asset`: pré-carregamento de assets.
 - `expo-font`: dependência nativa das fontes e ícones.
 - `expo-splash-screen`: controle da splash screen.
@@ -460,7 +482,6 @@ consistente.
 ### Gráficos e suporte
 
 - `react-native-svg`: renderização vetorial.
-- `react-native-svg-charts`: gráficos de pizza e barras.
 - `react-native-gesture-handler` e `react-native-screens`: suporte aos
   navegadores nativos.
 
