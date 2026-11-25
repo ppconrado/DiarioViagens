@@ -58,7 +58,7 @@ export function PhotoField({ value, onChange }: { value: string | null; onChange
       </View>
       {value ? <Pressable accessibilityRole="button" disabled={working} onPress={() => onChange(null)} style={styles.removeButton}><Ionicons name="trash-outline" size={16} color={colors.danger} /><Text style={styles.removeText}>Remover foto</Text></Pressable> : null}
       {error ? <Text accessibilityRole="alert" style={styles.error}>{error}</Text> : null}
-      <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} onCaptured={(uri) => { onChange(uri); setCameraOpen(false); }} />
+      <CameraModal visible={cameraOpen} onClose={() => setCameraOpen(false)} onCaptured={(uri, warning) => { onChange(uri); setError(warning ?? null); setCameraOpen(false); }} />
     </View>
   );
 }
